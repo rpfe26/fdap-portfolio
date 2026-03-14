@@ -217,6 +217,21 @@ plugins/fdap-portfolio/templates/single-fdap.php
 1. Vérifier que l'extension Imagick est installée sur le serveur
 2. Consulter les logs : `/var/log/apache2/error.log`
 
+### Intégration avec Ultimate Member
+
+Le plugin détecte automatiquement Ultimate Member et affiche une page de connexion stylisée avec redirection vers la page `/login/` du site.
+
+Si Ultimate Member n'est pas installé, un formulaire de connexion WordPress standard est affiché.
+
+---
+
+## Versions
+
+| Version | Notes |
+|---------|-------|
+| **1.0.1** | Intégration Ultimate Member - redirection vers page de connexion |
+| **1.0.0** | Version initiale - tableau + accordéon |
+
 ---
 
 ## Mise à Jour

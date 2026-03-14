@@ -273,9 +273,72 @@ class FDAP_Shortcodes {
     }
     
     /**
-     * Login form - Design moderne et corrigé
+     * Login form - Redirection vers Ultimate Member ou formulaire intégré
      */
     private function login_form() {
+        // Si Ultimate Member est actif, afficher un lien vers la page de connexion
+        if (class_exists('UM')) {
+            $login_page = get_page_by_path('login');
+            if ($login_page) {
+                $login_url = add_query_arg('redirect_to', urlencode(get_permalink()), get_permalink($login_page));
+                ob_start();
+                ?>
+                <div class="fdap-login-redirect">
+                    <div class="fdap-redirect-card">
+                        <div class="fdap-redirect-icon">🔒</div>
+                        <h3>Connexion requise</h3>
+                        <p>Vous devez être connecté pour accéder à cette page.</p>
+                        <a href="<?php echo esc_url($login_url); ?>" class="fdap-btn fdap-btn-primary">Se connecter</a>
+                    </div>
+                </div>
+                <style>
+                    .fdap-login-redirect {
+                        display: flex;
+                        justify-content: center;
+                        padding: 40px 20px;
+                    }
+                    .fdap-redirect-card {
+                        text-align: center;
+                        background: #fff;
+                        padding: 40px;
+                        border-radius: 16px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                        max-width: 400px;
+                    }
+                    .fdap-redirect-icon {
+                        font-size: 48px;
+                        margin-bottom: 20px;
+                    }
+                    .fdap-redirect-card h3 {
+                        margin: 0 0 10px 0;
+                        color: #1e293b;
+                        font-size: 24px;
+                    }
+                    .fdap-redirect-card p {
+                        color: #64748b;
+                        margin-bottom: 25px;
+                    }
+                    .fdap-btn {
+                        display: inline-block;
+                        padding: 14px 28px;
+                        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                        color: #fff;
+                        text-decoration: none;
+                        border-radius: 12px;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                    }
+                    .fdap-btn:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+                    }
+                </style>
+                <?php
+                return ob_get_clean();
+            }
+        }
+        
+        // Formulaire de fallback si UM n'est pas disponible
         ob_start();
         ?>
         <style>

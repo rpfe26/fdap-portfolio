@@ -1,0 +1,457 @@
+<?php
+/**
+ * Form fields template - Design Moderne et Responsive (sans accordéon)
+ */
+defined('ABSPATH') || exit;
+
+$is_edit = $post_id > 0;
+
+// Récupérer les valeurs des fichiers multimédia
+$audio_id = $is_edit ? get_post_meta($post_id, '_fdap_audio', true) : 0;
+$video_id = $is_edit ? get_post_meta($post_id, '_fdap_video', true) : 0;
+$fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
+?>
+<div class="fdap-form-container">
+    <form method="post" enctype="multipart/form-data" class="fdap-form">
+        <?php wp_nonce_field('fdap_form_submit', 'fdap_nonce'); ?>
+        <input type="hidden" name="fdap_action" value="<?php echo $is_edit ? 'update' : 'create'; ?>">
+        <?php if ($is_edit): ?>
+            <input type="hidden" name="fdap_id" value="<?php echo $post_id; ?>">
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['msg']) && $_GET['msg'] === 'saved'): ?>
+            <div class="fdap-success">✓ Fiche enregistrée avec succès !</div>
+        <?php endif; ?>
+        
+        <!-- Titre simple en haut -->
+        <div class="fdap-title-field">
+            <label>Titre de la fiche <span class="required">*</span></label>
+            <input type="text" name="post_title" value="<?php echo esc_attr($is_edit ? get_the_title($post_id) : ''); ?>" required placeholder="Ex: Montage d'une installation électrique">
+        </div>
+        
+        <!-- Identité de l'élève -->
+        <div class="fdap-section">
+            <h3>👤 Identité de l'élève</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-field">
+                    <label>Nom / Prénom <span class="required">*</span></label>
+                    <input type="text" name="fdap_nom_prenom" value="<?php echo esc_attr($values['nom_prenom'] ?? ''); ?>" required>
+                </div>
+                <div class="fdap-field">
+                    <label>Date de saisie <span class="required">*</span></label>
+                    <input type="date" name="fdap_date_de_saisie" value="<?php echo esc_attr($values['date_de_saisie'] ?? ''); ?>" required>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contexte de réalisation -->
+        <div class="fdap-section">
+            <h3>📍 Contexte de réalisation</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-field">
+                    <label>Lieu <span class="required">*</span></label>
+                    <div class="fdap-radio-group">
+                        <label class="fdap-radio-label">
+                            <input type="radio" name="fdap_lieu_" value="lycee" <?php checked($values['lieu_'] ?? '', 'lycee'); ?>>
+                            <span class="fdap-radio-text">Au Lycée (Plateau technique)</span>
+                        </label>
+                        <label class="fdap-radio-label">
+                            <input type="radio" name="fdap_lieu_" value="pfmp" <?php checked($values['lieu_'] ?? '', 'pfmp'); ?>>
+                            <span class="fdap-radio-text">En Entreprise (PFMP)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="fdap-field">
+                    <label>Enseigne / Entreprise</label>
+                    <input type="text" name="fdap_enseigne_" value="<?php echo esc_attr($values['enseigne_'] ?? ''); ?>" placeholder="Nom de l'entreprise">
+                </div>
+                <div class="fdap-field">
+                    <label>Lieu spécifique</label>
+                    <input type="text" name="fdap_lieu_specifique" value="<?php echo esc_attr($values['lieu_specifique'] ?? ''); ?>" placeholder="Atelier, salle, etc.">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Domaine / Compétences -->
+        <div class="fdap-section">
+            <h3>🎯 Domaine / Compétences</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-field">
+                    <label>Domaine</label>
+                    <input type="text" name="fdap_domaine" value="<?php echo esc_attr($values['domaine'] ?? ''); ?>" placeholder="Ex: Électrotechnique">
+                </div>
+                <div class="fdap-field">
+                    <label>Compétences mobilisées</label>
+                    <textarea name="fdap_competences" rows="3" placeholder="Listez les compétences..."><?php echo esc_textarea($values['competences'] ?? ''); ?></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Conditions et ressources -->
+        <div class="fdap-section">
+            <h3>⚙️ Conditions et ressources</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-field">
+                    <label>Autonomie</label>
+                    <select name="fdap_autonomie" class="fdap-select">
+                        <option value="">-- Sélectionner --</option>
+                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                            <option value="<?php echo $i; ?>" <?php selected($values['autonomie'] ?? '', $i); ?>><?php echo str_repeat('★', $i) . str_repeat('☆', 5-$i); ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="fdap-field">
+                    <label>Matériels / Logiciels</label>
+                    <textarea name="fdap_materiels" rows="2" placeholder="Outils, logiciels utilisés..."><?php echo esc_textarea($values['materiels'] ?? ''); ?></textarea>
+                </div>
+                <div class="fdap-field">
+                    <label>Commanditaire</label>
+                    <input type="text" name="fdap_commanditaire" value="<?php echo esc_attr($values['commanditaire'] ?? ''); ?>" placeholder="Personne demandeuse">
+                </div>
+                <div class="fdap-field">
+                    <label>Contraintes</label>
+                    <input type="text" name="fdap_contraintes" value="<?php echo esc_attr($values['contraintes'] ?? ''); ?>" placeholder="Délais, ressources...">
+                </div>
+                <div class="fdap-field">
+                    <label>Consignes reçues</label>
+                    <textarea name="fdap_consignes_recues" rows="2" placeholder="Instructions données..."><?php echo esc_textarea($values['consignes_recues'] ?? ''); ?></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Descriptif Détaillé -->
+        <div class="fdap-section">
+            <h3>📋 Descriptif Détaillé</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-field">
+                    <label>Avec qui ?</label>
+                    <input type="text" name="fdap_avec_qui_" value="<?php echo esc_attr($values['avec_qui_'] ?? ''); ?>" placeholder="Équipe, tuteur...">
+                </div>
+                <div class="fdap-field">
+                    <label>Déroulement</label>
+                    <textarea name="fdap_deroulement" rows="4" placeholder="Décrivez les étapes..."><?php echo esc_textarea($values['deroulement'] ?? ''); ?></textarea>
+                </div>
+                <div class="fdap-field">
+                    <label>Résultats obtenus</label>
+                    <textarea name="fdap_resultats_" rows="3" placeholder="Ce qui a été réalisé..."><?php echo esc_textarea($values['resultats_'] ?? ''); ?></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bilan Personnel -->
+        <div class="fdap-section">
+            <h3>💡 Bilan Personnel</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-field">
+                    <label>Difficulté rencontrée</label>
+                    <select name="fdap_difficulte" class="fdap-select">
+                        <option value="">-- Sélectionner --</option>
+                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                            <option value="<?php echo $i; ?>" <?php selected($values['difficulte'] ?? '', $i); ?>><?php echo str_repeat('★', $i) . str_repeat('☆', 5-$i); ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="fdap-field">
+                    <label>Plaisir ressenti</label>
+                    <select name="fdap_plaisir_" class="fdap-select">
+                        <option value="">-- Sélectionner --</option>
+                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                            <option value="<?php echo $i; ?>" <?php selected($values['plaisir_'] ?? '', $i); ?>><?php echo str_repeat('★', $i) . str_repeat('☆', 5-$i); ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="fdap-field">
+                    <label>Améliorations possibles</label>
+                    <textarea name="fdap_ameliorations" rows="3" placeholder="Ce que vous feriez différemment..."><?php echo esc_textarea($values['ameliorations'] ?? ''); ?></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Multimédia -->
+        <div class="fdap-section">
+            <h3>🎤 Multimédia / Entretien</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-media-grid">
+                    <!-- Audio -->
+                    <div class="fdap-media-item">
+                        <label>Audio</label>
+                        <?php if ($audio_id): 
+                            $audio_url = wp_get_attachment_url($audio_id);
+                            $audio_name = basename($audio_url);
+                        ?>
+                            <div class="fdap-file-preview">
+                                <div class="fdap-file-icon">🎵</div>
+                                <div class="fdap-file-info">
+                                    <span class="fdap-file-name" title="<?php echo esc_attr($audio_name); ?>"><?php echo esc_html(mb_strimwidth($audio_name, 0, 25, '...')); ?></span>
+                                    <div class="fdap-file-actions">
+                                        <a href="<?php echo esc_url($audio_url); ?>" target="_blank" class="fdap-file-btn fdap-file-btn-open">Ouvrir</a>
+                                        <button type="button" class="fdap-file-btn fdap-file-btn-remove" onclick="removeFile(this, 'audio');">Supprimer</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="fdap_keep_audio" value="<?php echo $audio_id; ?>">
+                            </div>
+                        <?php else: ?>
+                            <label class="fdap-upload-box">
+                                <input type="file" name="fdap_audio" onchange="this.nextElementSibling.nextElementSibling.textContent=this.files[0]?this.files[0].name.substring(0,25):'';this.nextElementSibling.nextElementSibling.style.color='#2563eb';" accept="audio/*" class="fdap-hidden-input">
+                                <span class="fdap-upload-icon">🎤</span>
+                                <span class="fdap-upload-text">Ajouter un audio</span>
+                                <span class="fdap-upload-hint">MP3, WAV, OGG...</span>
+                            </label>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Vidéo -->
+                    <div class="fdap-media-item">
+                        <label>Vidéo</label>
+                        <?php if ($video_id): 
+                            $video_url = wp_get_attachment_url($video_id);
+                            $video_name = basename($video_url);
+                        ?>
+                            <div class="fdap-file-preview">
+                                <div class="fdap-file-icon">🎬</div>
+                                <div class="fdap-file-info">
+                                    <span class="fdap-file-name" title="<?php echo esc_attr($video_name); ?>"><?php echo esc_html(mb_strimwidth($video_name, 0, 25, '...')); ?></span>
+                                    <div class="fdap-file-actions">
+                                        <a href="<?php echo esc_url($video_url); ?>" target="_blank" class="fdap-file-btn fdap-file-btn-open">Ouvrir</a>
+                                        <button type="button" class="fdap-file-btn fdap-file-btn-remove" onclick="removeFile(this, 'video');">Supprimer</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="fdap_keep_video" value="<?php echo $video_id; ?>">
+                            </div>
+                        <?php else: ?>
+                            <label class="fdap-upload-box">
+                                <input type="file" name="fdap_video" onchange="var h=this.parentElement.querySelector(\".fdap-upload-hint\");if(this.files[0]){h.textContent=this.files[0].name.substring(0,25);h.style.fontWeight=\"600\";}" accept="video/*" class="fdap-hidden-input">
+                                <span class="fdap-upload-icon">📹</span>
+                                <span class="fdap-upload-text">Ajouter une vidéo</span>
+                                <span class="fdap-upload-hint">MP4, WebM, MOV...</span>
+                            </label>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Document -->
+                    <div class="fdap-media-item">
+                        <label>Document</label>
+                        <?php if ($fichier_id): 
+                            $fichier_url = wp_get_attachment_url($fichier_id);
+                            $fichier_name = basename($fichier_url);
+                            $ext = strtolower(pathinfo($fichier_name, PATHINFO_EXTENSION));
+                            $icon = in_array($ext, ['pdf']) ? '📄' : (in_array($ext, ['doc', 'docx']) ? '📝' : '📁');
+                        ?>
+                            <div class="fdap-file-preview">
+                                <div class="fdap-file-icon"><?php echo $icon; ?></div>
+                                <div class="fdap-file-info">
+                                    <span class="fdap-file-name" title="<?php echo esc_attr($fichier_name); ?>"><?php echo esc_html(mb_strimwidth($fichier_name, 0, 25, '...')); ?></span>
+                                    <div class="fdap-file-actions">
+                                        <a href="<?php echo esc_url($fichier_url); ?>" target="_blank" class="fdap-file-btn fdap-file-btn-open">Ouvrir</a>
+                                        <button type="button" class="fdap-file-btn fdap-file-btn-remove" onclick="removeFile(this, 'fichier');">Supprimer</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="fdap_keep_fichier" value="<?php echo $fichier_id; ?>">
+                            </div>
+                        <?php else: ?>
+                            <label class="fdap-upload-box">
+                                <input type="file" name="fdap_fichier" onchange="var h=this.parentElement.querySelector(\".fdap-upload-hint\");if(this.files[0]){h.textContent=this.files[0].name.substring(0,25);h.style.fontWeight=\"600\";}" accept=".pdf,.doc,.docx,.xls,.xlsx" class="fdap-hidden-input">
+                                <span class="fdap-upload-icon">📄</span>
+                                <span class="fdap-upload-text">Ajouter un document</span>
+                                <span class="fdap-upload-hint">PDF, Word, Excel...</span>
+                            </label>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Photos -->
+        <div class="fdap-section">
+            <h3>📷 Photos</h3>
+            <div class="fdap-section-body">
+                <div class="fdap-photos-grid">
+                    <?php for ($i = 1; $i <= 6; $i++): 
+                        $photo_id = $is_edit ? get_post_meta($post_id, '_fdap_photo_' . $i, true) : 0;
+                        $photo_url = $photo_id ? wp_get_attachment_url($photo_id) : '';
+                    ?>
+                    <div class="fdap-photo-item">
+                        <label>Photo <?php echo $i; ?></label>
+                        <?php if ($photo_url): ?>
+                            <div class="fdap-photo-preview">
+                                <img src="<?php echo esc_url($photo_url); ?>" alt="Photo <?php echo $i; ?>">
+                                <div class="fdap-photo-overlay">
+                                    <a href="<?php echo esc_url($photo_url); ?>" target="_blank" class="fdap-photo-btn">🔍</a>
+                                    <button type="button" class="fdap-photo-btn fdap-photo-remove" onclick="removePhoto(this, <?php echo $i; ?>);">🗑</button>
+                                </div>
+                                <input type="hidden" name="fdap_keep_photo_<?php echo $i; ?>" value="<?php echo esc_attr($photo_id); ?>">
+                            </div>
+                        <?php else: ?>
+                            <label class="fdap-upload-box fdap-upload-box-photo">
+                                <input type="file" name="fdap_photo_<?php echo $i; ?>" accept="image/*" class="fdap-hidden-input" data-preview="photo-preview-<?php echo $i; ?>">
+                                <span class="fdap-upload-icon">📷</span>
+                                <span class="fdap-upload-text">Photo <?php echo $i; ?></span>
+                            </label>
+                            <div class="fdap-photo-preview fdap-photo-empty" id="photo-preview-<?php echo $i; ?>" style="display:none;"></div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endfor; ?>
+                </div>
+            </div>
+        </div>
+        
+        <div class="fdap-submit-wrap">
+            <button type="submit" class="fdap-submit-btn">
+                <?php echo $is_edit ? 'Mettre à jour' : 'Enregistrer la fiche'; ?>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Supprimer un fichier multimédia
+function removeFile(btn, type) {
+    var container = btn.closest('.fdap-file-preview');
+    var parent = container.closest('.fdap-media-item');
+    
+    // Ajouter un hidden input pour indiquer la suppression
+    var deleteInput = document.createElement('input');
+    deleteInput.type = 'hidden';
+    deleteInput.name = 'fdap_delete_' + type;
+    deleteInput.value = '1';
+    parent.appendChild(deleteInput);
+    
+    // Cacher le preview
+    container.style.display = 'none';
+    
+    // Ajouter la zone d'upload
+    var labels = {audio: {icon: '🎤', text: 'Ajouter un audio', hint: 'MP3, WAV, OGG...'},
+                  video: {icon: '📹', text: 'Ajouter une vidéo', hint: 'MP4, WebM, MOV...'},
+                  fichier: {icon: '📄', text: 'Ajouter un document', hint: 'PDF, Word, Excel...'}};
+    var l = labels[type];
+    
+    var html = '<label class="fdap-upload-box">' +
+        '<input type="file" name="fdap_' + type + '" accept="' + (type === 'audio' ? 'audio/*' : (type === 'video' ? 'video/*' : '.pdf,.doc,.docx,.xls,.xlsx')) + '" class="fdap-hidden-input" onchange="var h=this.parentElement.querySelector('.fdap-upload-hint');if(this.files[0]){h.textContent=this.files[0].name.substring(0,25);h.style.fontWeight='600';}">' +
+        '<span class="fdap-upload-icon">' + l.icon + '</span>' +
+        '<span class="fdap-upload-text">' + l.text + '</span>' +
+        '<span class="fdap-upload-hint">' + l.hint + '</span>' +
+    '</label>';
+    parent.insertAdjacentHTML('beforeend', html);
+},
+                  video: {icon: '📹', text: 'Ajouter une vidéo', hint: 'MP4, WebM, MOV...'},
+                  fichier: {icon: '📄', text: 'Ajouter un document', hint: 'PDF, Word, Excel...'}};
+    var l = labels[type];
+    
+    var html = '<label class="fdap-upload-box">' +
+        '<input type="file" name="fdap_' + type + '" accept="' + (type === 'audio' ? 'audio/*' : (type === 'video' ? 'video/*' : '.pdf,.doc,.docx,.xls,.xlsx')) + '" class="fdap-hidden-input" onchange="var h=this.parentElement.querySelector(\".fdap-upload-hint\");if(this.files[0]){h.textContent=this.files[0].name.substring(0,25);h.style.fontWeight=\"600\";}">' +
+        '<span class="fdap-upload-icon">' + l.icon + '</span>' +
+        '<span class="fdap-upload-text">' + l.text + '</span>' +
+        '<span class="fdap-upload-hint">' + l.hint + '</span>' +
+    '</label>';
+    parent.insertAdjacentHTML('beforeend', html);
+}
+
+// Supprimer une photo
+function removePhoto(btn, index) {
+    var container = btn.closest('.fdap-photo-preview');
+    var parent = container.closest('.fdap-photo-item');
+    
+    // Ajouter un hidden input pour indiquer la suppression
+    var deleteInput = document.createElement('input');
+    deleteInput.type = 'hidden';
+    deleteInput.name = 'fdap_delete_photo_' + index;
+    deleteInput.value = '1';
+    parent.appendChild(deleteInput);
+    
+    // Cacher le preview
+    container.style.display = 'none';
+    
+    // Ajouter la zone d'upload
+    var html = '<label class="fdap-upload-box fdap-upload-box-photo">' +
+        '<input type="file" name="fdap_photo_' + index + '" accept="image/*" class="fdap-hidden-input" data-preview="photo-preview-' + index + '">' +
+        '<span class="fdap-upload-icon">📷</span>' +
+        '<span class="fdap-upload-text">Photo ' + index + '</span>' +
+    '</label>' +
+    '<div class="fdap-photo-preview fdap-photo-empty" id="photo-preview-' + index + '" style="display:none;"></div>';
+    parent.insertAdjacentHTML('beforeend', html);
+    
+    // Réattacher l'event listener
+    var input = parent.querySelector('input[data-preview="photo-preview-' + index + '"]');
+    if (input) {
+        input.addEventListener('change', handlePhotoUpload);
+    }
+}
+}
+
+// Preview photo upload
+function handlePhotoUpload(e) {
+    var previewId = this.getAttribute('data-preview');
+    var preview = document.getElementById(previewId);
+    var parent = this.closest('.fdap-photo-item');
+    var uploadBox = parent.querySelector('.fdap-upload-box-photo');
+    
+    if (this.files && this.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">' +
+                '<div class="fdap-photo-overlay">' +
+                    '<button type="button" class="fdap-photo-btn fdap-photo-remove" onclick="this.closest(\'.fdap-photo-preview\').style.display=\'none\'; document.querySelector(\'.fdap-upload-box-photo input\').value=\'\';">🗑</button>' +
+                '</div>';
+            preview.style.display = 'block';
+            uploadBox.style.display = 'none';
+        };
+        reader.readAsDataURL(this.files[0]);
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.fdap-hidden-input').forEach(function(input) {
+        if (input.name.startsWith('fdap_photo_')) {
+            input.addEventListener('change', handlePhotoUpload);
+        }
+    });
+});
+</script>
+<script>
+// Affichage du nom de fichier pour audio, video, document
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.fdap-hidden-input').forEach(function(input) {
+        if (input.name === 'fdap_audio' || input.name === 'fdap_video' || input.name === 'fdap_fichier') {
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    var name = this.files[0].name;
+                    var box = this.closest('.fdap-upload-box');
+                    if (box) {
+                        var hint = box.querySelector('.fdap-upload-hint');
+                        if (hint) {
+                            hint.textContent = name.substring(0, 25);
+                            hint.style.color = '#2563eb';
+                            hint.style.fontWeight = '600';
+                        }
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
+
+<script>
+// Affichage du nom de fichier pour audio, video, document
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.fdap-hidden-input').forEach(function(input) {
+        if (input.name === 'fdap_audio' || input.name === 'fdap_video' || input.name === 'fdap_fichier') {
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    var name = this.files[0].name;
+                    var box = this.closest('.fdap-upload-box');
+                    if (box) {
+                        var hint = box.querySelector('.fdap-upload-hint');
+                        if (hint) {
+                            hint.textContent = name.substring(0, 25);
+                            hint.style.color = '#2563eb';
+                            hint.style.fontWeight = '600';
+                        }
+                    }
+                }
+            });
+        }
+    });
+});
+</script>

@@ -295,6 +295,50 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
             </div>
         </div>
         
+        <!-- Commentaires du professeur (Admin uniquement) -->
+        <?php if (current_user_can('edit_others_posts')): ?>
+        <?php
+        global $post;
+        $post_id = isset($_GET['fdap_id']) ? (int) $_GET['fdap_id'] : 0;
+        $existing_comments = $post_id ? get_post_meta($post_id, '_fdap_comments', true) : [];
+        if (!is_array($existing_comments)) $existing_comments = [];
+        ?>
+        <div class="fdap-section fdap-comments-section" style="background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); border: 2px solid #f59e0b; margin-bottom: 20px;">
+            <h3 style="background: #f59e0b; color: #fff; padding: 12px 15px; margin: 0;">📝 Commentaires du professeur</h3>
+            <div class="fdap-section-body" style="padding: 20px; background: #fff;">
+                <?php if (!empty($existing_comments)): ?>
+                <div class="fdap-comments-history" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; color: #666; margin-bottom: 10px;">Historique (<?php echo count($existing_comments); ?>) :</h4>
+                    <?php $c_idx = 0; foreach (array_reverse($existing_comments) as $comment): $orig_idx = count($existing_comments) - 1 - $c_idx; ?>
+                    <div class="fdap-comment-entry" style="background: #fff; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 10px; border-radius: 4px; position: relative;"><button type="submit" name="fdap_delete_comment" value="<?php echo $orig_idx; ?>" style="position: absolute; top: 8px; right: 8px; background: #fee2e2; color: #dc2626; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;">×
+                        <div style="font-size: 12px; color: #888; margin-bottom: 5px;"><?php echo date('d/m/Y à H:i', strtotime($comment['date'])); ?></div>
+                        <?php if (!empty($comment['text'])): ?><div style="margin-bottom: 8px;"><?php echo nl2br(esc_html($comment['text'])); ?></div><?php endif; ?>
+                        <?php if (!empty($comment['audio_id'])): $audio_url = wp_get_attachment_url($comment['audio_id']); ?>
+                        <div><audio controls style="max-width: 100%;"><source src="<?php echo esc_url($audio_url); ?>"></audio></div><?php endif; ?>
+                    </div>
+                    <?php $c_idx++; endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <div class="fdap-new-comment" style="background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px dashed #f59e0b;">
+                    <h4 style="font-size: 14px; color: #92400e; margin: 0 0 10px 0;">Ajouter un commentaire :</h4>
+                    <div class="fdap-field" style="margin-bottom: 15px;">
+                        <label style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Commentaire texte</label>
+                        <textarea name="fdap_comment_text" rows="3" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;" placeholder="Commentaire..."></textarea>
+                    </div>
+                    <div class="fdap-field" style="margin-bottom: 15px;">
+                        <label style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Commentaire audio</label>
+                        <button type="button" class="fdap-record-btn" id="fdap-record-btn" onclick="startFdapAudioRecording(this)" style="background: #10b981; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">🎤 Enregistrer</button>
+                        <button type="button" class="fdap-stop-btn" id="fdap-stop-btn" onclick="stopFdapAudioRecording(this)" disabled style="background: #ef4444; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; opacity: 0.5;">⏹ Arrêter</button>
+                        <canvas id="fdap-waveform" width="200" height="40" style="display: none; background: #1a1a2e; border-radius: 8px; vertical-align: middle;"></canvas>
+                        <span class="fdap-recording-time" style="color: #666; font-size: 14px; display: none;">00:00</span>
+                        <div class="fdap-audio-preview" id="fdap-audio-preview" style="margin-top: 10px; display: none;"><audio id="fdap-recorded-audio" controls style="max-width: 100%;"></audio> <button type="button" onclick="clearFdapAudioRecording()" style="background: #fee2e2; color: #dc2626; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px;">🗑 Supprimer</button></div>
+                        <input type="hidden" name="fdap_comment_audio_data" id="fdap-comment-audio-data">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="fdap-submit-wrap">
             <button type="submit" class="fdap-submit-btn">
                 <?php echo $is_edit ? 'Mettre à jour' : 'Enregistrer la fiche'; ?>
@@ -303,86 +347,3 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
     </form>
 </div>
 
-<script>
-// Supprimer un fichier multimédia
-function removeFile(btn, hiddenName) {
-    var container = btn.closest('.fdap-file-preview');
-    var parent = container.closest('.fdap-media-item');
-    var hiddenInput = container.querySelector('input[name="' + hiddenName + '"]');
-    
-    // Supprimer le preview
-    container.remove();
-    
-    // Supprimer le hidden input
-    if (hiddenInput) hiddenInput.remove();
-    
-    // Ajouter la zone d'upload
-    var type = hiddenName.replace('fdap_keep_', '');
-    var labels = {audio: {icon: '🎤', text: 'Ajouter un audio', hint: 'MP3, WAV, OGG...'},
-                  video: {icon: '📹', text: 'Ajouter une vidéo', hint: 'MP4, WebM, MOV...'},
-                  fichier: {icon: '📄', text: 'Ajouter un document', hint: 'PDF, Word, Excel...'}};
-    var l = labels[type];
-    
-    var html = '<label class="fdap-upload-box">' +
-        '<input type="file" name="fdap_' + type + '" accept="' + (type === 'audio' ? 'audio/*' : (type === 'video' ? 'video/*' : '.pdf,.doc,.docx,.xls,.xlsx')) + '" class="fdap-hidden-input">' +
-        '<span class="fdap-upload-icon">' + l.icon + '</span>' +
-        '<span class="fdap-upload-text">' + l.text + '</span>' +
-        '<span class="fdap-upload-hint">' + l.hint + '</span>' +
-    '</label>';
-    parent.insertAdjacentHTML('beforeend', html);
-}
-
-// Supprimer une photo
-function removePhoto(btn, index) {
-    var container = btn.closest('.fdap-photo-preview');
-    var parent = container.closest('.fdap-photo-item');
-    
-    // Supprimer le preview
-    container.remove();
-    
-    // Ajouter la zone d'upload
-    var html = '<label class="fdap-upload-box fdap-upload-box-photo">' +
-        '<input type="file" name="fdap_photo_' + index + '" accept="image/*" class="fdap-hidden-input" data-preview="photo-preview-' + index + '">' +
-        '<span class="fdap-upload-icon">📷</span>' +
-        '<span class="fdap-upload-text">Photo ' + index + '</span>' +
-    '</label>' +
-    '<div class="fdap-photo-preview fdap-photo-empty" id="photo-preview-' + index + '" style="display:none;"></div>';
-    parent.insertAdjacentHTML('beforeend', html);
-    
-    // Réattacher l'event listener
-    var input = parent.querySelector('input[data-preview="photo-preview-' + index + '"]');
-    if (input) {
-        input.addEventListener('change', handlePhotoUpload);
-    }
-}
-
-// Preview photo upload
-function handlePhotoUpload(e) {
-    var previewId = this.getAttribute('data-preview');
-    var preview = document.getElementById(previewId);
-    var parent = this.closest('.fdap-photo-item');
-    var uploadBox = parent.querySelector('.fdap-upload-box-photo');
-    
-    if (this.files && this.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">' +
-                '<div class="fdap-photo-overlay">' +
-                    '<button type="button" class="fdap-photo-btn fdap-photo-remove" onclick="this.closest(\'.fdap-photo-preview\').style.display=\'none\'; document.querySelector(\'.fdap-upload-box-photo input\').value=\'\';">🗑</button>' +
-                '</div>';
-            preview.style.display = 'block';
-            uploadBox.style.display = 'none';
-        };
-        reader.readAsDataURL(this.files[0]);
-    }
-}
-
-// Initialisation
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.fdap-hidden-input').forEach(function(input) {
-        if (input.name.startsWith('fdap_photo_')) {
-            input.addEventListener('change', handlePhotoUpload);
-        }
-    });
-});
-</script>

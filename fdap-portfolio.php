@@ -2,7 +2,7 @@
 /**
  * Plugin Name: FDAP Portfolio
  * Description: Fiches d'activités pédagogiques pour portfolios étudiants.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Patrick L'Hôte
  * Text Domain: fdap-portfolio
  * Requires at least: 5.0
@@ -12,7 +12,7 @@
 defined('ABSPATH') || exit;
 
 // Constants
-define('FDAP_VERSION', '1.0.2');
+define('FDAP_VERSION', '1.0.3');
 define('FDAP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FDAP_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -20,12 +20,18 @@ define('FDAP_PLUGIN_URL', plugin_dir_url(__FILE__));
 add_action('plugins_loaded', function() {
     require_once FDAP_PLUGIN_DIR . 'includes/class-post-type.php';
     require_once FDAP_PLUGIN_DIR . 'includes/class-shortcodes.php';
+    require_once FDAP_PLUGIN_DIR . 'includes/class-admin.php';
     
     // Register CPT
     new FDAP_Post_Type();
     
     // Register shortcodes
     new FDAP_Shortcodes();
+    
+    // Admin dashboard (only in admin)
+    if (is_admin()) {
+        new FDAP_Admin();
+    }
 }, 20);
 
 // Template loader for single-fdap
@@ -141,3 +147,11 @@ add_action('wp_enqueue_scripts', function() {
         wp_enqueue_style('fdap-style', FDAP_PLUGIN_URL . 'assets/css/style.css', [], FDAP_VERSION);
     }
 });
+
+// Enqueue FDAP audio script on FDAP pages
+add_action('wp_enqueue_scripts', function() {
+    if (is_page('fdap-2') || (get_query_var('post_type') === 'fdap') || strpos($_SERVER['REQUEST_URI'], 'fdap') !== false) {
+        wp_enqueue_script('fdap-audio', FDAP_PLUGIN_URL . 'includes/fdap-audio.js', array(), '1.0', true);
+    }
+});
+require_once FDAP_PLUGIN_DIR . 'includes/class-export.php';

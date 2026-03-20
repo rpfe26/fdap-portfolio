@@ -1,6 +1,6 @@
 <?php
 /**
- * Template: Affichage single FDAP - Structure identique au formulaire
+ * Template: Affichage single FDAP
  */
 
 defined('ABSPATH') || exit;
@@ -26,6 +26,8 @@ while (have_posts()) : the_post();
     $audio_id = get_post_meta($id, '_fdap_audio', true);
     $video_id = get_post_meta($id, '_fdap_video', true);
     $fichier_id = get_post_meta($id, '_fdap_fichier', true);
+    $status = get_post_status($id);
+    $fdap_comments = get_post_meta($id, '_fdap_comments', true);
     ?>
     <style>
         .fdap-view { max-width: 800px; margin: 20px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); }
@@ -50,28 +52,131 @@ while (have_posts()) : the_post();
         .fdap-view .fdap-actions a.fdap-btn-export { background: #00a32a; }
         .fdap-view .fdap-actions a.fdap-btn-export:hover { background: #008a20; }
         .fdap-view .required { color: #dc3232; }
+        
+        /* Bannière Contrôlée */
+        .fdap-controlled-banner {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: pulse-banner 2s infinite;
+        }
+        @keyframes pulse-banner {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+        .fdap-banner-icon {
+            font-size: 48px;
+            flex-shrink: 0;
+        }
+        .fdap-banner-text h3 {
+            margin: 0 0 8px 0;
+            color: #065f46;
+            font-size: 18px;
+        }
+        .fdap-banner-text p {
+            margin: 0;
+            color: #047857;
+            font-size: 14px;
+        }
+        
+        /* Commentaires professeur */
+        .fdap-comments-teacher {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .fdap-comments-teacher h3 {
+            background: #f59e0b;
+            color: #fff;
+            padding: 12px 15px;
+            margin: 0;
+            font-size: 16px;
+        }
+        .fdap-comments-teacher .fdap-comments-list {
+            padding: 15px;
+        }
+        .fdap-comment-entry {
+            background: #fff;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .fdap-comment-entry:last-child {
+            margin-bottom: 0;
+        }
+        .fdap-comment-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .fdap-comment-text {
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
         @media (max-width: 600px) {
             .fdap-view { padding: 15px; margin: 10px; }
             .fdap-view .fdap-photos { grid-template-columns: repeat(2, 1fr); }
+            .fdap-controlled-banner { flex-direction: column; text-align: center; }
         }
     </style>
     
     <article id="fdap-<?php the_ID(); ?>" class="fdap-view">
+        
+        <?php if ($status === 'controlled'): ?>
+        <!-- Bannière Contrôlée -->
+        <div class="fdap-controlled-banner">
+            <span class="fdap-banner-icon">✅</span>
+            <div class="fdap-banner-text">
+                <h3>Cette fiche a été contrôlée</h3>
+                <p>Votre professeur a validé cette fiche. Consultez les commentaires ci-dessus.</p>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php
+        // Affichage des commentaires en haut
+        if (!empty($fdap_comments) && is_array($fdap_comments)):
+            $fdap_comments = array_reverse($fdap_comments);
+        ?>
+        <div class="fdap-comments-teacher">
+            <h3>📝 Commentaires du professeur</h3>
+            <div class="fdap-comments-list">
+                <?php foreach ($fdap_comments as $comment): 
+                    $date_fmt = isset($comment['date']) ? date('d/m/Y à H:i', strtotime($comment['date'])) : '';
+                ?>
+                <div class="fdap-comment-entry">
+                    <div class="fdap-comment-date">📅 <?php echo esc_html($date_fmt); ?></div>
+                    <?php if (!empty($comment['text'])): ?>
+                    <div class="fdap-comment-text"><?php echo esc_html($comment['text']); ?></div>
+                    <?php endif; ?>
+                    <?php if (!empty($comment['audio_id'])): 
+                        $audio_url = wp_get_attachment_url($comment['audio_id']);
+                        if ($audio_url):
+                    ?>
+                    <div class="fdap-comment-audio">
+                        <audio controls style="max-width: 100%;"><source src="<?php echo esc_url($audio_url); ?>"></audio>
+                    </div>
+                    <?php endif; endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        
         <header>
             <h1><?php the_title(); ?></h1>
             <p class="fdap-subtitle">(Fiche d'Activité Professionnelle)</p>
         </header>
-        
-        <!-- Titre -->
-        <section class="fdap-section">
-            <h3 class="fdap-section-title">Titre de la fiche</h3>
-            <div class="fdap-section-content">
-                <div class="fdap-field">
-                    <label class="fdap-field-label">Titre</label>
-                    <div class="fdap-field-value" style="font-size:18px;font-weight:bold;"><?php the_title(); ?></div>
-                </div>
-            </div>
-        </section>
         
         <!-- Identité de l'élève -->
         <section class="fdap-section">
@@ -285,8 +390,10 @@ while (have_posts()) : the_post();
         <!-- Actions -->
         <div class="fdap-actions">
             <a href="<?php echo get_permalink(get_page_by_path('mes-fdap')); ?>">← Retour</a>
+            <?php if (current_user_can('edit_others_posts') || get_post_field('post_author', $id) == get_current_user_id()): ?>
             <a href="<?php echo add_query_arg('fdap_id', $id, get_permalink(get_page_by_path('fdap-2'))); ?>">Modifier</a>
-            <a href="#" onclick="window.print();" class="fdap-btn-export">📄 Imprimer</a>
+            <?php endif; ?>
+            <a href="?export=html" class="fdap-btn-export">📄 Exporter</a>
         </div>
         
         <footer class="fdap-footer">

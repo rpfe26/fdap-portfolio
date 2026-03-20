@@ -45,11 +45,14 @@ class FDAP_Shortcodes {
         
         if ($post_id) {
             $post = get_post($post_id);
+            // Admins can edit any fiche, students only their own
             if ($post && $post->post_type === 'fdap' && ($post->post_author == get_current_user_id() || current_user_can('edit_others_posts'))) {
                 $fields = $this->get_all_fields();
                 foreach ($fields as $field) {
                     $values[$field] = get_post_meta($post_id, '_fdap_' . $field, true);
                 }
+            } else {
+                return '<div class="fdap-error">Vous n\'êtes pas autorisé à modifier cette fiche.</div>';
             }
         }
         
@@ -82,25 +85,53 @@ class FDAP_Shortcodes {
         // Handle deletion
         if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['fdap_id'])) {
             $del_id = (int) $_GET['fdap_id'];
-            if (get_post_field('post_author', $del_id) == get_current_user_id()) {
+            if (get_post_field('post_author', $del_id) == get_current_user_id() || current_user_can('delete_others_posts')) {
                 wp_trash_post($del_id);
             }
         }
         
-        $query = new WP_Query([
+        $current_user_id = get_current_user_id();
+        $is_admin = current_user_can('edit_others_posts');
+        
+        // Filter by author (admin only)
+        $author_filter = 0;
+        if ($is_admin && isset($_GET['author_filter'])) {
+            $author_filter = (int) $_GET['author_filter'];
+        }
+        
+        // Build query
+        $query_args = [
             'post_type' => 'fdap',
-            'author' => get_current_user_id(),
             'posts_per_page' => -1,
-            'post_status' => ['publish', 'draft'],
-        ]);
+            'post_status' => ['publish', 'controlled'],
+        ];
+        
+        // If admin with filter, show filtered results; if admin without filter, show all; if student, show own
+        if ($author_filter) {
+            $query_args['author'] = $author_filter;
+        } elseif (!$is_admin) {
+            $query_args['author'] = $current_user_id;
+        }
+        // If admin and no filter, show all (no author restriction)
+        
+        $query = new WP_Query($query_args);
         
         $form_url = get_permalink(get_page_by_path('fdap-2'));
+        
+        // Get all authors with FDAP posts (for admin filter)
+        $authors = [];
+        if ($is_admin) {
+            $authors = get_users([
+                'has_published_posts' => ['fdap'],
+                'orderby' => 'display_name',
+            ]);
+        }
         
         ob_start();
         ?>
         <div class="fdap-dashboard">
             <div class="fdap-header">
-                <h2>Mes fiches</h2>
+                <h2><?php echo $is_admin && !$author_filter ? 'Toutes les fiches FDAP' : 'Mes fiches'; ?></h2>
                 <a href="<?php echo esc_url($form_url); ?>" class="fdap-btn-new">+ Nouvelle activité</a>
             </div>
             
@@ -108,12 +139,34 @@ class FDAP_Shortcodes {
                 <div class="fdap-success">Fiche enregistrée !</div>
             <?php endif; ?>
             
+            <?php if ($is_admin): ?>
+                <!-- Admin filter by student -->
+                <div class="fdap-admin-filter">
+                    <form method="get" class="fdap-filter-form">
+                        <?php foreach ($_GET as $key => $value): ?>
+                            <?php if ($key !== 'author_filter'): ?>
+                                <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>">
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <label>Filtrer par élève :</label>
+                        <select name="author_filter" class="fdap-filter-select" onchange="this.form.submit()">
+                            <option value="">Tous les élèves</option>
+                            <?php foreach ($authors as $author): ?>
+                                <option value="<?php echo $author->ID; ?>" <?php selected($author_filter, $author->ID); ?>>
+                                    <?php echo esc_html($author->display_name); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                </div>
+            <?php endif; ?>
+            
             <?php if ($query->have_posts()): ?>
                 <div class="fdap-table-wrapper">
                     <table class="fdap-table">
                         <thead>
                             <tr>
-                                <th>Titre</th>
+                                <th>Élève / Titre</th>
                                 <th>Date</th>
                                 <th>Lieu</th>
                                 <th>Statut</th>
@@ -124,24 +177,38 @@ class FDAP_Shortcodes {
                             <?php while ($query->have_posts()): $query->the_post(); ?>
                                 <?php 
                                 $post_id = get_the_ID();
+                                $post_author_id = get_the_author_ID();
                                 $nom = get_post_meta($post_id, '_fdap_nom_prenom', true);
                                 $lieu = get_post_meta($post_id, '_fdap_lieu_', true);
                                 $lieu_label = $lieu === 'lycee' ? 'Lycée' : ($lieu === 'pfmp' ? 'PFMP' : '-');
                                 $status = get_post_status();
-                                $status_label = $status === 'publish' ? 'Publiée' : 'Brouillon';
-                                $status_class = $status === 'publish' ? 'published' : 'draft';
+                                
+                                $status_labels = [
+                                    'publish' => ['label' => '📤 Publiée', 'class' => 'fdap-status--published'],
+                                    'controlled' => ['label' => '✅ Contrôlée', 'class' => 'fdap-status--controlled'],
+                                ];
+                                $status_info = $status_labels[$status] ?? ['label' => $status, 'class' => ''];
+                                
+                                $can_edit = ($post_author_id == $current_user_id) || $is_admin;
                                 ?>
                                 <tr>
                                     <td class="fdap-title-cell">
                                         <a href="<?php the_permalink(); ?>" class="fdap-link"><?php echo esc_html($nom ?: get_the_title()); ?></a>
+                                        <?php if ($is_admin && $post_author_id != $current_user_id): ?>
+                                            <span class="fdap-author-tag">par <?php the_author(); ?></span>
+                                        <?php endif; ?>
                                     </td>
                                     <td><?php echo get_the_date('d/m/Y'); ?></td>
                                     <td><?php echo esc_html($lieu_label); ?></td>
-                                    <td><span class="fdap-status fdap-status--<?php echo $status_class; ?>"><?php echo $status_label; ?></span></td>
+                                    <td><span class="fdap-status <?php echo $status_info['class']; ?>"><?php echo $status_info['label']; ?></span></td>
                                     <td class="fdap-actions">
                                         <a href="<?php the_permalink(); ?>" class="fdap-btn fdap-btn--view" title="Voir">👁</a>
-                                        <a href="<?php echo add_query_arg('fdap_id', $post_id, $form_url); ?>" class="fdap-btn fdap-btn--edit" title="Modifier">✏️</a>
-                                        <a href="<?php echo add_query_arg(['action' => 'delete', 'fdap_id' => $post_id]); ?>" class="fdap-btn fdap-btn--delete" title="Supprimer" onclick="return confirm('Supprimer cette fiche ?')">🗑</a>
+                                        <?php if ($can_edit): ?>
+                                            <a href="<?php echo add_query_arg('fdap_id', $post_id, $form_url); ?>" class="fdap-btn fdap-btn--edit" title="Modifier">✏️</a>
+                                        <?php endif; ?>
+                                        <?php if ($post_author_id == $current_user_id || current_user_can('delete_others_posts')): ?>
+                                            <a href="<?php echo add_query_arg(['action' => 'delete', 'fdap_id' => $post_id]); ?>" class="fdap-btn fdap-btn--delete" title="Supprimer" onclick="return confirm('Supprimer cette fiche ?')">🗑</a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -155,6 +222,59 @@ class FDAP_Shortcodes {
                 </div>
             <?php endif; wp_reset_postdata(); ?>
         </div>
+        
+        <style>
+            .fdap-admin-filter {
+                background: #f8fafc;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .fdap-admin-filter label {
+                font-weight: 600;
+                color: #1e293b;
+            }
+            .fdap-filter-select {
+                padding: 8px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                background: #fff;
+                min-width: 200px;
+            }
+            .fdap-author-tag {
+                display: block;
+                font-size: 0.85em;
+                color: #666;
+                margin-top: 4px;
+            }
+            /* Status badges */
+            .fdap-status {
+                display: inline-block;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            .fdap-status--published {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+            .fdap-status--controlled {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: #fff;
+                animation: pulse-controlled 2s infinite;
+            }
+            @keyframes pulse-controlled {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+                50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            }
+                background: #fef3c7;
+                color: #d97706;
+            }
+        </style>
         <?php
         return ob_get_clean();
     }
@@ -164,21 +284,39 @@ class FDAP_Shortcodes {
      */
     private function save_fiche() {
         $user_id = get_current_user_id();
+        $is_admin = current_user_can('edit_others_posts');
         
         $post_data = [
             'post_title' => sanitize_text_field($_POST['post_title'] ?? 'Nouvelle fiche'),
             'post_type' => 'fdap',
             'post_status' => 'publish',
-            'post_author' => $user_id,
         ];
         
         $action = sanitize_text_field($_POST['fdap_action'] ?? 'create');
         
         if ($action === 'update' && isset($_POST['fdap_id'])) {
             $post_id = (int) $_POST['fdap_id'];
+            
+            // Verify ownership or admin
+            $existing_post = get_post($post_id);
+            if (!$existing_post || $existing_post->post_type !== 'fdap') {
+                return false;
+            }
+            
+            // Only allow owner or admin to edit
+            if ($existing_post->post_author != $user_id && !$is_admin) {
+                return false;
+            }
+            
             $post_data['ID'] = $post_id;
             wp_update_post($post_data);
+
+            // Si un élève modifie une fiche contrôlée, repasser en publié
+            if (!$is_admin && get_post_status($post_id) === "controlled") {
+                wp_update_post(["ID" => $post_id, "post_status" => "publish"]);
+            }
         } else {
+            $post_data['post_author'] = $user_id;
             $post_id = wp_insert_post($post_data);
         }
         
@@ -204,6 +342,74 @@ class FDAP_Shortcodes {
         $cat = get_term_by('slug', 'portfolio', 'category');
         if ($cat) {
             wp_set_object_terms($post_id, $cat->term_id, 'category');
+        }
+        
+        // Delete comment if requested
+        if ($is_admin && isset($_POST["fdap_delete_comment"])) {
+            $delete_idx = (int) $_POST["fdap_delete_comment"];
+            $comments = get_post_meta($post_id, "_fdap_comments", true);
+            if (is_array($comments) && isset($comments[$delete_idx])) {
+                // Delete associated audio if exists
+                if (!empty($comments[$delete_idx]["audio_id"])) {
+                    wp_delete_attachment($comments[$delete_idx]["audio_id"], true);
+                }
+                array_splice($comments, $delete_idx, 1);
+                update_post_meta($post_id, "_fdap_comments", $comments);
+                // Redirect back to the same page
+                wp_redirect(add_query_arg(["msg" => "deleted", "fdap_id" => $post_id], get_permalink(get_page_by_path("fdap-2"))));
+                exit;
+            }
+        }
+
+        // Save comments (admin only)
+        if ($is_admin && (isset($_POST["fdap_comment_text"]) || isset($_POST["fdap_comment_audio_data"]))) {
+            $comment_text = isset($_POST["fdap_comment_text"]) ? sanitize_textarea_field($_POST["fdap_comment_text"]) : "";
+            $comment_audio_data = isset($_POST["fdap_comment_audio_data"]) ? $_POST["fdap_comment_audio_data"] : "";
+            
+            if (!empty($comment_text) || !empty($comment_audio_data)) {
+                $comments = get_post_meta($post_id, "_fdap_comments", true);
+                if (!is_array($comments)) $comments = [];
+                
+                $new_comment = [
+                    "date" => current_time("mysql"),
+                ];
+                
+                if (!empty($comment_text)) {
+                    $new_comment["text"] = $comment_text;
+                }
+                
+                if (!empty($comment_audio_data)) {
+                    $audio_data = str_replace("data:audio/webm;base64,", "", $comment_audio_data);
+                    $audio_data = str_replace("data:audio/ogg;base64,", "", $audio_data);
+                    $audio_data = base64_decode($audio_data);
+                    
+                    $upload_dir = wp_upload_dir();
+                    $filename = "comment-" . $post_id . "-" . time() . ".webm";
+                    $filepath = $upload_dir["path"] . "/" . $filename;
+                    
+                    if (file_put_contents($filepath, $audio_data)) {
+                        $attachment = [
+                            "post_mime_type" => "audio/webm",
+                            "post_title" => "Commentaire audio FDAP #" . $post_id,
+                            "post_content" => "",
+                            "post_status" => "inherit",
+                        ];
+                        $attach_id = wp_insert_attachment($attachment, $filepath, $post_id);
+                        if (!is_wp_error($attach_id)) {
+                            $new_comment["audio_id"] = $attach_id;
+                        }
+                    }
+                }
+                
+                $comments[] = $new_comment;
+                update_post_meta($post_id, "_fdap_comments", $comments);
+                // Redirect back to the same page
+                wp_redirect(add_query_arg(["msg" => "deleted", "fdap_id" => $post_id], get_permalink(get_page_by_path("fdap-2"))));
+                exit;
+                
+                // Change status to controlled
+                wp_update_post(["ID" => $post_id, "post_status" => "controlled"]);
+            }
         }
         
         // Handle file uploads

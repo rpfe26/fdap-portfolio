@@ -12,7 +12,7 @@
 defined('ABSPATH') || exit;
 
 // Constants
-define('FDAP_VERSION', '1.0.3');
+define('FDAP_VERSION', '1.0.6');
 define('FDAP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FDAP_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -151,7 +151,7 @@ add_action('wp_enqueue_scripts', function() {
 // Enqueue FDAP audio script on FDAP pages
 add_action('wp_enqueue_scripts', function() {
     if (is_page('fdap-2') || (get_query_var('post_type') === 'fdap') || strpos($_SERVER['REQUEST_URI'], 'fdap') !== false) {
-        wp_enqueue_script('fdap-audio', FDAP_PLUGIN_URL . 'includes/fdap-audio.js', array(), '1.0', true);
+        wp_enqueue_script('fdap-audio', FDAP_PLUGIN_URL . 'includes/fdap-audio.js', array(), '1.0.6', true);
     }
 });
 require_once FDAP_PLUGIN_DIR . 'includes/class-export.php';

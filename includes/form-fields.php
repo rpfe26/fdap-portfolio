@@ -172,8 +172,8 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
             <h3>🎤 Multimédia / Entretien</h3>
             <div class="fdap-section-body">
                 <div class="fdap-media-grid">
-                    <!-- Audio -->
-                    <div class="fdap-media-item">
+                    <!-- Audio avec enregistrement intégré -->
+                    <div class="fdap-media-item" id="fdap-audio-item">
                         <label>Audio</label>
                         <?php if ($audio_id): 
                             $audio_url = wp_get_attachment_url($audio_id);
@@ -191,12 +191,25 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
                                 <input type="hidden" name="fdap_keep_audio" value="<?php echo $audio_id; ?>">
                             </div>
                         <?php else: ?>
-                            <label class="fdap-upload-box">
-                                <input type="file" name="fdap_audio" accept="audio/*" class="fdap-hidden-input">
-                                <span class="fdap-upload-icon">🎤</span>
-                                <span class="fdap-upload-text">Ajouter un audio</span>
-                                <span class="fdap-upload-hint">MP3, WAV, OGG...</span>
-                            </label>
+                            <!-- Interface audio simplifiée comme commentaires prof -->
+                            <div class="fdap-audio-box" id="fdap-audio-box">
+                                <label class="fdap-upload-box fdap-upload-box-audio">
+                                    <input type="file" name="fdap_audio" accept="audio/*" class="fdap-hidden-input" id="fdap-audio-upload">
+                                    <span class="fdap-upload-icon">📁</span>
+                                    <span class="fdap-upload-text">Fichier audio</span>
+                                    <span class="fdap-upload-hint">MP3, WAV, OGG</span>
+                                </label>
+                                <button type="button" class="fdap-record-btn" id="fdap-student-record-btn" onclick="startStudentAudioRecording(this)">🎤 Enregistrer</button>
+                                <button type="button" class="fdap-pause-btn" id="fdap-student-pause-btn" onclick="togglePauseStudentAudio()" style="display:none; background: #f59e0b; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600;">⏸ Pause</button>
+                                <button type="button" class="fdap-stop-btn" id="fdap-student-stop-btn" onclick="stopStudentAudioRecording(this)" style="display:none;">⏹ Arrêter</button>
+                                <canvas id="fdap-student-waveform" width="180" height="40" style="display:none;"></canvas>
+                                <span class="fdap-timer" id="fdap-student-timer" style="display:none;">00:00</span>
+                            </div>
+                            <div class="fdap-preview-row" id="fdap-student-preview" style="display: none;">
+                                <audio id="fdap-student-audio" controls></audio>
+                                <button type="button" class="fdap-clear-btn" onclick="clearStudentAudio()">🗑 Supprimer</button>
+                            </div>
+                            <input type="hidden" name="fdap_student_audio_data" id="fdap-student-audio-data">
                         <?php endif; ?>
                     </div>
                     
@@ -222,8 +235,8 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
                             <label class="fdap-upload-box">
                                 <input type="file" name="fdap_video" accept="video/*" class="fdap-hidden-input">
                                 <span class="fdap-upload-icon">📹</span>
-                                <span class="fdap-upload-text">Ajouter une vidéo</span>
-                                <span class="fdap-upload-hint">MP4, WebM, MOV...</span>
+                                <span class="fdap-upload-text">Vidéo</span>
+                                <span class="fdap-upload-hint">MP4, WebM</span>
                             </label>
                         <?php endif; ?>
                     </div>
@@ -252,8 +265,8 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
                             <label class="fdap-upload-box">
                                 <input type="file" name="fdap_fichier" accept=".pdf,.doc,.docx,.xls,.xlsx" class="fdap-hidden-input">
                                 <span class="fdap-upload-icon">📄</span>
-                                <span class="fdap-upload-text">Ajouter un document</span>
-                                <span class="fdap-upload-hint">PDF, Word, Excel...</span>
+                                <span class="fdap-upload-text">Document</span>
+                                <span class="fdap-upload-hint">PDF, Word</span>
                             </label>
                         <?php endif; ?>
                     </div>
@@ -328,7 +341,8 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
                     <div class="fdap-field" style="margin-bottom: 15px;">
                         <label style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">Commentaire audio</label>
                         <button type="button" class="fdap-record-btn" id="fdap-record-btn" onclick="startFdapAudioRecording(this)" style="background: #10b981; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">🎤 Enregistrer</button>
-                        <button type="button" class="fdap-stop-btn" id="fdap-stop-btn" onclick="stopFdapAudioRecording(this)" disabled style="background: #ef4444; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; opacity: 0.5;">⏹ Arrêter</button>
+                        <button type="button" class="fdap-pause-btn" id="fdap-pause-btn" onclick="togglePauseFdapAudio()" style="display: none; background: #f59e0b; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">⏸ Pause</button>
+                        <button type="button" class="fdap-stop-btn" id="fdap-stop-btn" onclick="stopFdapAudioRecording(this)" style="display: none; background: #ef4444; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">⏹ Arrêter</button>
                         <canvas id="fdap-waveform" width="200" height="40" style="display: none; background: #1a1a2e; border-radius: 8px; vertical-align: middle;"></canvas>
                         <span class="fdap-recording-time" style="color: #666; font-size: 14px; display: none;">00:00</span>
                         <div class="fdap-audio-preview" id="fdap-audio-preview" style="margin-top: 10px; display: none;"><audio id="fdap-recorded-audio" controls style="max-width: 100%;"></audio> <button type="button" onclick="clearFdapAudioRecording()" style="background: #fee2e2; color: #dc2626; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px;">🗑 Supprimer</button></div>
@@ -346,4 +360,3 @@ $fichier_id = $is_edit ? get_post_meta($post_id, '_fdap_fichier', true) : 0;
         </div>
     </form>
 </div>
-

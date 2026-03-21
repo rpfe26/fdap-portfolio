@@ -1151,3 +1151,155 @@
         justify-content: center;
     }
 }
+/* ============================================
+   FDAP Audio - Style final (comme prof)
+   ============================================ */
+
+/* Boîte audio */
+.fdap-audio-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.fdap-upload-box-audio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-height: 80px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.fdap-upload-box-audio:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+/* Bouton enregistrer - seul bouton visible au départ */
+.fdap-audio-box .fdap-record-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.fdap-audio-box .fdap-record-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.fdap-audio-box .fdap-record-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Bouton arrêter - MASQUÉ par défaut */
+.fdap-audio-box .fdap-stop-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.fdap-audio-box .fdap-stop-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.fdap-audio-box .fdap-stop-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Waveform et timer - MASQUÉS par défaut */
+#fdap-student-waveform {
+    background: #0f172a;
+    border-radius: 8px;
+    display: none !important;
+}
+
+#fdap-student-timer {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #dc2626;
+    min-width: 45px;
+    display: none !important;
+}
+
+/* Preview audio - MASQUÉ par défaut */
+.fdap-preview-row {
+    display: none !important;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+#fdap-student-audio {
+    flex: 1;
+    max-width: 200px;
+    height: 36px;
+}
+
+.fdap-clear-btn {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.fdap-clear-btn:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    #fdap-student-waveform {
+        width: 120px !important;
+    }
+    
+    #fdap-student-audio {
+        max-width: 140px;
+    }
+    
+    .fdap-audio-box .fdap-record-btn,
+    .fdap-audio-box .fdap-stop-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}

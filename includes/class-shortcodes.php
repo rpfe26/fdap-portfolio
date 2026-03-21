@@ -474,7 +474,43 @@ class FDAP_Shortcodes {
             }
         }
         
-        wp_redirect(add_query_arg('msg', 'saved', get_permalink(get_page_by_path('mes-fdap'))));
+        
+        // Audio enregistré par l'élève (base64)
+        if (!empty($_POST['fdap_student_audio_data'])) {
+            $audio_data = $_POST['fdap_student_audio_data'];
+            
+            // Supprimer l'ancien audio si existant
+            $current_audio_id = get_post_meta($post_id, '_fdap_audio', true);
+            if ($current_audio_id && empty($_POST['fdap_keep_audio'])) {
+                wp_delete_attachment($current_audio_id, true);
+            }
+            
+            // Décoder le base64
+            $audio_data = str_replace("data:audio/webm;base64,", "", $audio_data);
+            $audio_data = str_replace("data:audio/ogg;base64,", "", $audio_data);
+            $audio_data = str_replace("data:audio/mp3;base64,", "", $audio_data);
+            $audio_data = base64_decode($audio_data);
+            
+            if ($audio_data) {
+                $upload_dir = wp_upload_dir();
+                $filename = "fdap-audio-" . $post_id . "-" . time() . ".webm";
+                $filepath = $upload_dir['path'] . '/' . $filename;
+                
+                if (file_put_contents($filepath, $audio_data)) {
+                    $attachment = [
+                        'post_mime_type' => 'audio/webm',
+                        'post_title' => 'Audio FDAP #' . $post_id,
+                        'post_content' => '',
+                        'post_status' => 'inherit',
+                    ];
+                    $attach_id = wp_insert_attachment($attachment, $filepath, $post_id);
+                    if (!is_wp_error($attach_id)) {
+                        update_post_meta($post_id, '_fdap_audio', $attach_id);
+                    }
+                }
+            }
+        }
+                wp_redirect(add_query_arg('msg', 'saved', get_permalink(get_page_by_path('mes-fdap'))));
         exit;
     }
     

@@ -21,6 +21,7 @@ add_action('plugins_loaded', function() {
     require_once FDAP_PLUGIN_DIR . 'includes/class-post-type.php';
     require_once FDAP_PLUGIN_DIR . 'includes/class-shortcodes.php';
     require_once FDAP_PLUGIN_DIR . 'includes/class-admin.php';
+    require_once FDAP_PLUGIN_DIR . 'includes/helpers.php';
     
     // Register CPT
     new FDAP_Post_Type();
@@ -28,10 +29,9 @@ add_action('plugins_loaded', function() {
     // Register shortcodes
     new FDAP_Shortcodes();
     
-    // Admin dashboard (only in admin)
-    if (is_admin()) {
-        new FDAP_Admin();
-    }
+    // Admin & impersonation features
+    new FDAP_Admin();
+
 }, 20);
 
 // Template loader for single-fdap
@@ -87,46 +87,11 @@ add_filter('wp_handle_upload', function($upload, $context = 'upload') {
         return $upload;
     }
     
-    // Check for Imagick
-    if (!class_exists('Imagick')) {
-        return $upload;
-    }
-    
-    try {
-        $image = new Imagick($upload['file']);
-        $image->autoOrient();
-        
-        // Convert to JPEG
-        $image->setImageFormat('jpeg');
-        
-        // Resize if needed (max 1920px)
-        $geometry = $image->getImageGeometry();
-        if ($geometry['width'] > 1920 || $geometry['height'] > 1920) {
-            $image->resizeImage(1920, 1920, Imagick::FILTER_LANCZOS, 1, true);
-        }
-        
-        // Compress to 300KB max
-        $quality = 75;
-        $maxSize = 300000;
-        $blob = $image->getImageBlob();
-        
-        while ($quality >= 40 && strlen($blob) > $maxSize) {
-            $image->setImageCompressionQuality($quality);
-            $blob = $image->getImageBlob();
-            $quality -= 5;
-        }
-        
-        $image->stripImage();
-        $image->writeImage($upload['file']);
-        $image->destroy();
-        
-        // Update file size
-        $upload['size'] = filesize($upload['file']);
-        
-    } catch (Exception $e) {
-        // Log error but don't break upload
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('[FDAP] Image compression error: ' . $e->getMessage());
+    // Appel de la fonction de compression centralisée
+    if (function_exists('fdap_compress_image_file')) {
+        $result = fdap_compress_image_file($upload['file'], $upload['type']);
+        if ($result) {
+            $upload['size'] = $result['final_size'];
         }
     }
     
@@ -148,10 +113,5 @@ add_action('wp_enqueue_scripts', function() {
     }
 });
 
-// Enqueue FDAP audio script on FDAP pages
-add_action('wp_enqueue_scripts', function() {
-    if (is_page('fdap-2') || (get_query_var('post_type') === 'fdap') || strpos($_SERVER['REQUEST_URI'], 'fdap') !== false) {
-        wp_enqueue_script('fdap-audio', FDAP_PLUGIN_URL . 'includes/fdap-audio.js', array(), '1.0.6', true);
-    }
-});
+
 require_once FDAP_PLUGIN_DIR . 'includes/class-export.php';

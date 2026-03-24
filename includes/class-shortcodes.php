@@ -19,6 +19,19 @@ class FDAP_Shortcodes {
     public function enqueue_styles() {
         if (is_page('fdap-2') || is_page('mes-fdap') || is_singular('fdap')) {
             wp_enqueue_style('fdap-style', FDAP_PLUGIN_URL . 'assets/css/style.css', [], FDAP_VERSION);
+            wp_enqueue_style('fdap-selector-style', FDAP_PLUGIN_URL . 'assets/css/competence-selector.css', [], FDAP_VERSION);
+            
+            wp_enqueue_script('fdap-selector-js', FDAP_PLUGIN_URL . 'assets/js/competence-selector.js', [], FDAP_VERSION, true);
+            
+            // Audio recorder pour saisie élève + preview fichiers + prof
+
+            $js_version = filemtime(FDAP_PLUGIN_DIR . 'assets/js/student-audio-recorder.js');
+            wp_enqueue_script('fdap-student-audio', FDAP_PLUGIN_URL . 'assets/js/student-audio-recorder.js', [], $js_version, true);
+
+            
+            // Passer le référentiel au JS
+            require_once FDAP_PLUGIN_DIR . 'includes/referentiel-cap.php';
+            wp_localize_script('fdap-selector-js', 'fdapReferentiel', fdap_get_referentiel_cap());
         }
     }
     
@@ -35,12 +48,25 @@ class FDAP_Shortcodes {
             if (wp_verify_nonce($_POST['fdap_nonce'], 'fdap_form_submit')) {
                 $result = $this->save_fiche();
                 if ($result) {
-                    return '<div class="fdap-success">Fiche enregistrée avec succès !</div>';
+                    wp_redirect(add_query_arg(['msg' => 'saved'], get_permalink()));
+                    exit;
                 }
             }
         }
         
         $post_id = isset($_GET['fdap_id']) ? (int) $_GET['fdap_id'] : 0;
+        
+        // Handle deletion
+        if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['fdap_id']) && isset($_GET['_wpnonce'])) {
+            if (wp_verify_nonce($_GET['_wpnonce'], 'fdap_delete_' . $_GET['fdap_id'])) {
+                $del_id = (int) $_GET['fdap_id'];
+                if (get_post_field('post_author', $del_id) == get_current_user_id() || current_user_can('delete_others_posts')) {
+                    wp_trash_post($del_id);
+                    wp_redirect(remove_query_arg(['action', 'fdap_id', '_wpnonce']));
+                    exit;
+                }
+            }
+        }
         $values = [];
         
         if ($post_id) {
@@ -57,8 +83,13 @@ class FDAP_Shortcodes {
         }
         
         ob_start();
+        echo '<div class="fdap-main-wrapper fdap-form-container">';
+        fdap_render_impersonation_banner();
+
         include FDAP_PLUGIN_DIR . 'includes/form-fields.php';
+        echo '</div>';
         return ob_get_clean();
+
     }
     
     /**
@@ -82,13 +113,8 @@ class FDAP_Shortcodes {
             return $this->login_form();
         }
         
-        // Handle deletion
-        if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['fdap_id'])) {
-            $del_id = (int) $_GET['fdap_id'];
-            if (get_post_field('post_author', $del_id) == get_current_user_id() || current_user_can('delete_others_posts')) {
-                wp_trash_post($del_id);
-            }
-        }
+        // Deletion handling moved to form_shortcode for better URL management or kept here but with nonce
+        // ... handled above now ...
         
         $current_user_id = get_current_user_id();
         $is_admin = current_user_can('edit_others_posts');
@@ -129,7 +155,15 @@ class FDAP_Shortcodes {
         
         ob_start();
         ?>
-        <div class="fdap-dashboard">
+        <div class="fdap-main-wrapper fdap-dashboard">
+            <?php 
+            fdap_render_impersonation_banner(); 
+            fdap_render_competency_tracker($current_user_id);
+            ?>
+
+
+
+
             <div class="fdap-header">
                 <h2><?php echo $is_admin && !$author_filter ? 'Toutes les fiches FDAP' : 'Mes fiches'; ?></h2>
                 <a href="<?php echo esc_url($form_url); ?>" class="fdap-btn-new">+ Nouvelle activité</a>
@@ -166,12 +200,14 @@ class FDAP_Shortcodes {
                     <table class="fdap-table">
                         <thead>
                             <tr>
-                                <th>Élève / Titre</th>
+                                <th>Élève</th>
+                                <th>Activité (Titre)</th>
                                 <th>Date</th>
                                 <th>Lieu</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
                             </tr>
+
                         </thead>
                         <tbody>
                             <?php while ($query->have_posts()): $query->the_post(); ?>
@@ -192,24 +228,37 @@ class FDAP_Shortcodes {
                                 $can_edit = ($post_author_id == $current_user_id) || $is_admin;
                                 ?>
                                 <tr>
-                                    <td class="fdap-title-cell">
-                                        <a href="<?php the_permalink(); ?>" class="fdap-link"><?php echo esc_html($nom ?: get_the_title()); ?></a>
+                                    <td class="fdap-author-cell">
                                         <?php if ($is_admin && $post_author_id != $current_user_id): ?>
-                                            <span class="fdap-author-tag">par <?php the_author(); ?></span>
+                                            <strong><?php the_author(); ?></strong>
+                                        <?php else: ?>
+                                            <span style="color: #64748b;">Moi</span>
                                         <?php endif; ?>
                                     </td>
+                                    <td class="fdap-title-cell">
+                                        <a href="<?php the_permalink(); ?>" class="fdap-link" style="font-weight: 700; color: #1e293b;"><?php echo esc_html($nom ?: get_the_title()); ?></a>
+                                    </td>
+
                                     <td><?php echo get_the_date('d/m/Y'); ?></td>
                                     <td><?php echo esc_html($lieu_label); ?></td>
                                     <td><span class="fdap-status <?php echo $status_info['class']; ?>"><?php echo $status_info['label']; ?></span></td>
-                                    <td class="fdap-actions">
-                                        <a href="<?php the_permalink(); ?>" class="fdap-btn fdap-btn--view" title="Voir">👁</a>
+                                    <td class="fdap-actions" style="display: flex; gap: 6px; align-items: center;">
                                         <?php if ($can_edit): ?>
-                                            <a href="<?php echo add_query_arg('fdap_id', $post_id, $form_url); ?>" class="fdap-btn fdap-btn--edit" title="Modifier">✏️</a>
+                                            <a href="<?php echo add_query_arg('fdap_id', $post_id, $form_url); ?>" class="fdap-action-btn fdap-btn--edit" style="background: #6366f1; color: white; width: 34px; height: 34px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s ease;" title="Modifier">
+                                                ✏️
+                                            </a>
                                         <?php endif; ?>
+                                        <a href="<?php the_permalink(); ?>" class="fdap-action-btn fdap-btn--view" style="background: #3b82f6; color: white; width: 34px; height: 34px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s ease;" title="Voir">
+                                            👁
+                                        </a>
                                         <?php if ($post_author_id == $current_user_id || current_user_can('delete_others_posts')): ?>
-                                            <a href="<?php echo add_query_arg(['action' => 'delete', 'fdap_id' => $post_id]); ?>" class="fdap-btn fdap-btn--delete" title="Supprimer" onclick="return confirm('Supprimer cette fiche ?')">🗑</a>
+                                            <a href="<?php echo wp_nonce_url(add_query_arg(['action' => 'delete', 'fdap_id' => $post_id]), 'fdap_delete_' . $post_id); ?>" class="fdap-action-btn fdap-btn--delete" style="background: #ef4444; color: white; width: 34px; height: 34px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s ease;" onclick="return confirm('Supprimer cette fiche ?')" title="Supprimer">
+                                                🗑
+                                            </a>
                                         <?php endif; ?>
                                     </td>
+
+
                                 </tr>
                             <?php endwhile; ?>
                         </tbody>
@@ -311,10 +360,11 @@ class FDAP_Shortcodes {
             $post_data['ID'] = $post_id;
             wp_update_post($post_data);
 
-            // Si un élève modifie une fiche contrôlée, repasser en publié
-            if (!$is_admin && get_post_status($post_id) === "controlled") {
+            // Si un élève modifie sa fiche, elle repasse en "publié" pour contrôle
+            if (!$is_admin) {
                 wp_update_post(["ID" => $post_id, "post_status" => "publish"]);
             }
+
         } else {
             $post_data['post_author'] = $user_id;
             $post_id = wp_insert_post($post_data);
@@ -403,13 +453,15 @@ class FDAP_Shortcodes {
                 
                 $comments[] = $new_comment;
                 update_post_meta($post_id, "_fdap_comments", $comments);
-                // Redirect back to the same page
-                wp_redirect(add_query_arg(["msg" => "deleted", "fdap_id" => $post_id], get_permalink(get_page_by_path("fdap-2"))));
-                exit;
-                
+
                 // Change status to controlled
                 wp_update_post(["ID" => $post_id, "post_status" => "controlled"]);
+                
+                // Redirect back to the same page with success message
+                wp_redirect(add_query_arg(["msg" => "saved", "fdap_id" => $post_id], get_permalink(get_page_by_path("fdap-2"))));
+                exit;
             }
+
         }
         
         // Handle file uploads

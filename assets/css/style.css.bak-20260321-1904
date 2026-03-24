@@ -5,36 +5,21 @@
 
 /* Variables */
 :root {
-    --fdap-primary: #6366f1;
-    --fdap-primary-dark: #4f46e5;
+    --fdap-primary: #2563eb;
+    --fdap-primary-dark: #1d4ed8;
     --fdap-accent: #10b981;
     --fdap-accent-dark: #059669;
-    --fdap-grad-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    --fdap-grad-accent: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
     --fdap-bg: #f8fafc;
     --fdap-card: #ffffff;
     --fdap-border: #e2e8f0;
-    --fdap-text: #0f172a;
-
+    --fdap-text: #1e293b;
     --fdap-text-light: #64748b;
-    --fdap-radius: 12px;
-    --fdap-radius-sm: 8px;
-
-    --fdap-shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    --fdap-transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy transition */
-}
-
-@keyframes fdap-fade-up {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-
-
-/* Animation enregistrement audio */
-@keyframes fdap-blink {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.3; transform: scale(0.8); }
+    --fdap-radius: 16px;
+    --fdap-radius-sm: 10px;
+    --fdap-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --fdap-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --fdap-shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --fdap-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===== LOGIN PAGE ===== */
@@ -171,44 +156,15 @@
     font-weight: 500;
 }
 
-/* ===== MAIN WRAPPER & CONTAINER ===== */
-.fdap-main-wrapper {
-    background-color: #f1f5f9;
-    background-image: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-    padding: 80px 20px;
+/* ===== FORM CONTAINER ===== */
+.fdap-form-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 24px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--fdap-bg);
     min-height: 100vh;
 }
-
-
-.fdap-form-container, .fdap-dashboard, .fdap-view {
-    max-width: 1000px;
-    margin: 40px auto;
-    padding: 60px;
-    font-family: 'Outfit', 'Inter', sans-serif;
-    background: rgba(255, 255, 255, 0.85); /* Glass effect */
-    backdrop-filter: blur(20px);
-    border-radius: 16px;
-
-    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    position: relative;
-    animation: fdap-fade-up 0.8s ease-out;
-}
-
-
-
-
-@media (max-width: 768px) {
-    .fdap-main-wrapper {
-        padding: 0;
-    }
-    .fdap-form-container, .fdap-dashboard {
-        border-radius: 0;
-        padding: 24px 16px;
-    }
-}
-
-
 
 @media (min-width: 768px) {
     .fdap-form-container {
@@ -218,144 +174,69 @@
 }
 
 /* ===== TITLE FIELD ===== */
-.fdap-title-card {
-    background: #ffffff;
-    padding: 40px;
-    margin-bottom: 40px;
+/* Titre simple (sans fond bleu) */
+/* Titre principal avec fond clair */
+.fdap-title-field {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    padding: 20px;
+    margin-bottom: 24px;
     border-radius: var(--fdap-radius);
-    border: none;
-    background: var(--fdap-grad-primary);
-    box-shadow: 0 30px 60px -12px rgba(99, 102, 241, 0.4);
-    color: #ffffff;
-    text-align: center;
+    border: 2px solid #bfdbfe;
 }
 
-.fdap-title-card label {
+.fdap-title-field label {
+    color: var(--fdap-text);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
     display: block;
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 700;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
 }
 
-.fdap-title-card input {
+.fdap-title-field input {
     width: 100%;
-    padding: 20px 24px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 14px 16px;
+    border: 2px solid var(--fdap-border);
     border-radius: var(--fdap-radius-sm);
-    font-size: 2rem;
-    font-weight: 900;
+    font-size: 16px;
     font-family: inherit;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    color: #ffffff;
+    background: #ffffff;
     transition: var(--fdap-transition);
-    text-align: center;
 }
 
-.fdap-title-card input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.fdap-title-card input:focus {
+.fdap-title-field input:focus {
     outline: none;
-    border-color: #ffffff;
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.1);
-    transform: scale(1.02);
+    border-color: var(--fdap-primary);
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
 }
 
-
-/* Smartphone QR Card (Refined) */
-.fdap-qr-bridge {
-    background: #ffffff !important;
-    border: 1px solid var(--fdap-border) !important;
-    border-left: 6px solid #10b981 !important; /* Green for smartphone sync */
-    box-shadow: var(--fdap-shadow-md) !important;
-    margin-top: 40px;
+.fdap-title-field .required {
+    color: #ef4444;
 }
 .fdap-section {
-    margin-bottom: 40px;
-    background: #ffffff;
+    margin-bottom: 20px;
+    background: var(--fdap-card);
     border-radius: var(--fdap-radius);
-    border: 1px solid rgba(0,0,0,0.05);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
-
-    transition: var(--fdap-transition);
-    animation: fdap-fade-up 0.8s ease-out both;
+    box-shadow: var(--fdap-shadow-md);
     overflow: hidden;
+    transition: var(--fdap-transition);
 }
 
 .fdap-section:hover {
-    transform: translateY(-8px) scale(1.01);
-    box-shadow: 0 40px 80px -15px rgba(99, 102, 241, 0.25);
-    border-color: #6366f1;
+    box-shadow: var(--fdap-shadow-lg);
 }
 
-
-
-
-.fdap-section h3, .fdap-section-title {
+.fdap-section h3 {
     margin: 0;
-    padding: 24px 32px;
-    background: var(--fdap-grad-primary);
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border-radius: var(--fdap-radius) var(--fdap-radius) 0 0;
+    font-size: 1rem;
+    font-weight: 600;
 }
-
-
-.fdap-section h3 span {
-    font-size: 1.5rem;
-    display: inline-block;
-    transition: transform 0.3s ease;
-}
-
-.fdap-section:hover h3 span, .fdap-section:hover .fdap-section-title span {
-    transform: rotate(15deg) scale(1.2);
-}
-
-
-
-
-
 
 .fdap-section-body {
     padding: 24px;
     background: var(--fdap-card);
-}
-
-/* Grilles Responsive */
-.fdap-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.fdap-grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-@media (max-width: 768px) {
-    .fdap-grid-3 {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 600px) {
-    .fdap-grid-2 {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* ===== FIELDS ===== */
@@ -388,56 +269,30 @@
 .fdap-field select,
 .fdap-field textarea {
     width: 100%;
-    padding: 16px 18px;
-    border: 1.5px solid #cbd5e1; /* Sombre et net */
+    padding: 14px 16px;
+    border: 2px solid var(--fdap-border);
     border-radius: var(--fdap-radius-sm);
-    font-size: 15px;
+    font-size: 16px;
     font-family: inherit;
     transition: var(--fdap-transition);
-    background: #fcfdfe; /* Très léger reflet bleuté */
-    color: var(--fdap-text);
+    background: var(--fdap-card);
 }
 
-/* Accentuer les zones de saisie */
 .fdap-field input:focus,
 .fdap-field select:focus,
 .fdap-field textarea:focus {
     outline: none;
     border-color: var(--fdap-primary);
     background: #ffffff;
-    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.1);
-    transform: translateY(-1px);
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
 }
-
-/* Section Teacher - Mise en valeur spécifique */
-.fdap-teacher-section {
-    border-left: 8px solid #f59e0b !important;
-    background: linear-gradient(135deg, #fffcf5 0%, #ffffff 100%) !important;
-    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.1) !important;
-}
-
-.fdap-teacher-section h3 {
-    color: #92400e !important;
-}
-
-.fdap-section-body {
-    padding: 28px;
-    background: #ffffff;
-    border-radius: 0 0 var(--fdap-radius) var(--fdap-radius);
-    border-top: 1px solid rgba(0,0,0,0.05); /* Délimitation nette de la zone de saisie */
-}
-
-
-
-
 
 .fdap-field textarea {
-    min-height: 80px;
-
+    min-height: 100px;
     resize: vertical;
 }
 
-/* Select styling and Stars */
+/* Select styling */
 .fdap-select {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
@@ -445,39 +300,41 @@
     background-position: right 12px center;
     background-size: 20px;
     padding-right: 44px;
-    color: #fbbf24; /* Yellow stars by default in select if they are chars */
-    font-weight: 700;
 }
 
-.fdap-select option {
-    color: #fbbf24;
-    font-weight: 700;
-}
-
-.fdap-select option[value=""] {
-    color: var(--fdap-text-light);
-}
-
-/* Radio buttons horizontal (React style) */
-.fdap-radio-row {
+/* Radio buttons */
+.fdap-radio-group {
     display: flex;
-    gap: 32px;
-    margin-top: 8px;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.fdap-radio-inline {
+.fdap-radio-label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--fdap-bg);
+    border: 2px solid var(--fdap-border);
+    border-radius: var(--fdap-radius-sm);
     cursor: pointer;
-    font-weight: 500;
-    color: var(--fdap-text);
+    transition: var(--fdap-transition);
 }
 
-.fdap-radio-inline input[type="radio"] {
-    width: 18px;
-    height: 18px;
+.fdap-radio-label:hover {
+    border-color: var(--fdap-primary);
+    background: rgba(37,99,235,0.05);
+}
+
+.fdap-radio-label input[type="radio"] {
+    width: 20px;
+    height: 20px;
     accent-color: var(--fdap-primary);
+}
+
+.fdap-radio-text {
+    font-size: 15px;
+    color: var(--fdap-text);
 }
 
 /* File inputs */
@@ -630,26 +487,23 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 22px 60px;
-    background: var(--fdap-grad-accent);
+    gap: 8px;
+    padding: 18px 48px;
+    background: linear-gradient(135deg, var(--fdap-accent) 0%, var(--fdap-accent-dark) 100%);
     color: #ffffff;
     border: none;
-    border-radius: 50px;
-    font-size: 18px;
-    font-weight: 800;
+    border-radius: var(--fdap-radius);
+    font-size: 17px;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--fdap-transition);
-    box-shadow: 0 15px 35px -5px rgba(16, 185, 129, 0.4);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    box-shadow: 0 8px 20px rgba(16,185,129,0.4);
 }
 
 .fdap-submit-btn:hover {
-    transform: scale(1.05) translateY(-3px);
-    box-shadow: 0 25px 50px -10px rgba(16, 185, 129, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(16,185,129,0.5);
 }
-
 
 .fdap-submit-btn:active {
     transform: translateY(-1px);
@@ -722,32 +576,6 @@
     box-shadow: 0 8px 20px rgba(16,185,129,0.4);
     color: #ffffff;
 }
-
-/* Action Buttons in Table */
-.fdap-action-btn {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.fdap-action-btn:hover {
-    transform: translateY(-2px) scale(1.1);
-    filter: brightness(1.1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.fdap-action-btn:active {
-    transform: translateY(0) scale(0.95);
-}
-
-.fdap-admin-table td .button {
-    transition: all 0.2s ease !important;
-}
-
-.fdap-admin-table td .button:hover {
-    transform: translateY(-2px) scale(1.1);
-    filter: brightness(1.1);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
-}
-
 
 .fdap-grid {
     display: grid;
@@ -855,6 +683,8 @@
     
     .fdap-photos-grid {
         grid-template-columns: 1fr;
+    }
+    
     }
     
     .fdap-login-card {
@@ -1239,45 +1069,6 @@
     border: 1px solid var(--fdap-border);
 }
 
-/* Bouton de suppression (X) pour les photos */
-.fdap-photo-badge {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 24px;
-    height: 24px;
-    background: #ef4444;
-    color: #ffffff;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    z-index: 10;
-    transition: var(--fdap-transition);
-}
-
-.fdap-photo-badge:hover {
-    transform: scale(1.1);
-    background: #dc2626;
-}
-
-/* Indicateur de focus pour le copier-coller */
-.fdap-photo-item:focus-within {
-    outline: none;
-}
-
-.fdap-photo-item:focus-within .fdap-upload-box-photo,
-.fdap-photo-item:focus-within .fdap-photo-preview {
-    border: 2px solid var(--fdap-primary);
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-    background: var(--fdap-primary-light);
-}
-
 .fdap-photo-preview img {
     width: 100%;
     height: 100px;
@@ -1287,12 +1078,15 @@
 
 .fdap-photo-overlay {
     position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     opacity: 0;
     transition: var(--fdap-transition);
 }
@@ -1355,157 +1149,5 @@
     
     .fdap-file-actions {
         justify-content: center;
-    }
-}
-/* ============================================
-   FDAP Audio - Style final (comme prof)
-   ============================================ */
-
-/* Boîte audio */
-.fdap-audio-box {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-}
-
-.fdap-upload-box-audio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 16px 12px;
-    background: #f8fafc;
-    border: 2px dashed #cbd5e1;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
-    min-height: 80px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.fdap-upload-box-audio:hover {
-    border-color: #3b82f6;
-    background: #eff6ff;
-}
-
-/* Bouton enregistrer - seul bouton visible au départ */
-.fdap-audio-box .fdap-record-btn {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-}
-
-.fdap-audio-box .fdap-record-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-}
-
-.fdap-audio-box .fdap-record-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Bouton arrêter - MASQUÉ par défaut */
-.fdap-audio-box .fdap-stop-btn {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-}
-
-.fdap-audio-box .fdap-stop-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
-.fdap-audio-box .fdap-stop-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Waveform et timer - MASQUÉS par défaut */
-#fdap-student-waveform {
-    background: #0f172a;
-    border-radius: 8px;
-    display: none !important;
-}
-
-#fdap-student-timer {
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    font-weight: 600;
-    color: #dc2626;
-    min-width: 45px;
-    display: none !important;
-}
-
-/* Preview audio - MASQUÉ par défaut */
-.fdap-preview-row {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-    padding: 10px;
-    background: #f1f5f9;
-    border-radius: 8px;
-}
-
-#fdap-student-audio {
-    flex: 1;
-    max-width: 200px;
-    height: 36px;
-}
-
-.fdap-clear-btn {
-    background: #fee2e2;
-    color: #dc2626;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.fdap-clear-btn:hover {
-    background: #dc2626;
-    color: #fff;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-    #fdap-student-waveform {
-        width: 120px !important;
-    }
-    
-    #fdap-student-audio {
-        max-width: 140px;
-    }
-    
-    .fdap-audio-box .fdap-record-btn,
-    .fdap-audio-box .fdap-stop-btn {
-        padding: 8px 16px;
-        font-size: 13px;
     }
 }

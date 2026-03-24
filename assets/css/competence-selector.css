@@ -1,0 +1,157 @@
+/**
+ * Styles pour le sélecteur de compétences FDAP
+ */
+
+.fdap-poles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.fdap-pole-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 8px;
+    background: #ffffff;
+    border: 1px solid var(--fdap-border);
+    border-radius: var(--fdap-radius-sm);
+    cursor: pointer;
+    transition: var(--fdap-transition);
+}
+
+.fdap-pole-btn:hover {
+    border-color: var(--fdap-primary);
+    background: var(--fdap-primary-light);
+}
+
+.fdap-pole-btn.active {
+    background: var(--fdap-primary);
+    color: #ffffff;
+    border-color: var(--fdap-primary);
+    box-shadow: var(--fdap-shadow-md);
+}
+
+.fdap-pole-btn .pole-icon {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.fdap-pole-btn .pole-id {
+    font-weight: 900;
+    font-size: 0.9rem;
+}
+
+.fdap-pole-btn .pole-label {
+    font-size: 0.65rem;
+    line-height: 1.2;
+    opacity: 0.8;
+    text-align: center;
+}
+
+.fdap-meta-item {
+    border: 1px solid var(--fdap-border);
+    border-radius: var(--fdap-radius-sm);
+    margin-bottom: 8px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.fdap-meta-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.fdap-meta-header:hover {
+    background: #f8fafc;
+}
+
+.fdap-meta-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.fdap-subs-list {
+    padding: 8px 16px 16px 44px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.fdap-sub-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.fdap-sub-label:hover {
+    background: #f1f5f9;
+}
+
+.fdap-sub-label.active {
+    background: var(--fdap-primary-light);
+    color: var(--fdap-primary);
+}
+
+.fdap-summary-content {
+    background: #f8fafc;
+    border: 1px solid var(--fdap-border);
+    border-radius: var(--fdap-radius-sm);
+    padding: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.summary-line {
+    display: flex;
+    gap: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: var(--fdap-text-light);
+}
+
+.summary-line.is-meta {
+    font-weight: 800;
+    color: var(--fdap-primary);
+    margin-top: 8px;
+}
+
+.fdap-label-step {
+    display: block;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--fdap-text-light);
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+}
+
+.fdap-empty-state {
+    padding: 40px;
+    text-align: center;
+    background: #f8fafc;
+    border: 2px dashed var(--fdap-border);
+    border-radius: var(--fdap-radius-sm);
+    color: var(--fdap-text-light);
+    font-style: italic;
+}
+
+/* Animations */
+.anim-fade-in {
+    animation: fdapFadeIn 0.3s ease-out;
+}
+
+@keyframes fdapFadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
